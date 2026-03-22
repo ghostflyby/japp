@@ -24,7 +24,7 @@ public final class MemoryAccess {
     private static final Unsafe UNSAFE = Unsafe.getUnsafe();
     private static final long BUFFER_ADDRESS_OFFSET = UNSAFE.objectFieldOffset(Buffer.class, "address");
 
-    public static final int ARRAY_BYTE_BASE_OFFSET = Unsafe.ARRAY_BYTE_BASE_OFFSET;
+    public static final long ARRAY_BYTE_BASE_OFFSET = Unsafe.ARRAY_BYTE_BASE_OFFSET;
 
     private MemoryAccess() {
     }
