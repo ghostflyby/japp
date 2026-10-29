@@ -85,7 +85,7 @@ public static class JavaFinder
     }
 
     // Ported from OperatingSystem.parseOperatingSystem + getCheckedName.
-    private static string? ParseOperatingSystem(string? name)
+    private static string? ParseOperatingSystem(string name)
     {
         if (string.IsNullOrEmpty(name))
             return null;
@@ -103,7 +103,7 @@ public static class JavaFinder
 
     // Ported from Architecture.parseArchitecture + getCheckedName: raw
     // OS_ARCH/os.arch spellings to japp's checked names.
-    private static string? ParseArchitecture(string? value)
+    private static string? ParseArchitecture(string value)
     {
         if (string.IsNullOrEmpty(value))
             return null;

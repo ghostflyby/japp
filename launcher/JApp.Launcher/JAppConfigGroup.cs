@@ -171,21 +171,11 @@ public sealed class JAppConfigGroup
     {
         foreach (var reference in source)
         {
-            if (reference.Name is not null)
+            var index = target.FindIndex(existing => reference.Name.Equals(existing.Name));
+            if (index >= 0)
             {
-                var replaced = false;
-                for (var i = 0; i < target.Count; i++)
-                {
-                    if (reference.Name.Equals(target[i].Name))
-                    {
-                        target[i] = reference;
-                        replaced = true;
-                        break;
-                    }
-                }
-
-                if (replaced)
-                    continue;
+                target[index] = reference;
+                continue;
             }
 
             target.Add(reference);

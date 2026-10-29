@@ -20,11 +20,13 @@
 
 namespace JApp.Launcher;
 
-public abstract class JAppResourceGroupReference(string? name)
+public abstract class JAppResourceGroupReference(string name)
 {
     public const byte MagicNumber = 0x01;
 
-    public string? Name { get; } = name;
+    /// <summary>Never null on the launcher side — an unnamed entry reads back
+    /// as the empty string, which the boot side treats as anonymous.</summary>
+    public string Name { get; } = name;
 
     internal static JAppResourceGroupReference ReadFrom(ref LittleEndianReader reader)
     {
@@ -70,6 +72,11 @@ public abstract class JAppResourceGroupReference(string? name)
                 var version = reader.ReadStringOrNull();
                 var classifier = reader.ReadStringOrNull();
 
+                // repository and classifier are genuinely optional on the
+                // wire; a missing coordinate is malformed.
+                if (group is null || artifact is null || version is null)
+                    throw new IOException("Incomplete maven reference");
+
                 return new Maven(name, repository, group, artifact, version, classifier);
             }
             default:
@@ -77,7 +84,7 @@ public abstract class JAppResourceGroupReference(string? name)
         }
     }
 
-    public sealed class Local(string? name, int index, SortedList<int, int>? multiReleaseIndexes)
+    public sealed class Local(string name, int index, SortedList<int, int>? multiReleaseIndexes)
         : JAppResourceGroupReference(name)
     {
         public const byte Id = 0;
@@ -92,15 +99,15 @@ public abstract class JAppResourceGroupReference(string? name)
     }
 
     public sealed class Maven(
-        string? name, string? repository, string? group, string? artifact, string? version, string? classifier)
+        string name, string? repository, string group, string artifact, string version, string? classifier)
         : JAppResourceGroupReference(name)
     {
         public const byte Id = 1;
 
         public string? Repository => repository;
-        public string? Group => group;
-        public string? Artifact => artifact;
-        public string? Version => version;
+        public string Group => group;
+        public string Artifact => artifact;
+        public string Version => version;
         public string? Classifier => classifier;
 
         public override string ToString() =>

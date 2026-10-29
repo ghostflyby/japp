@@ -130,14 +130,8 @@ internal sealed class LittleEndianWriter
         _stream.Write(bytes);
     }
 
-    public void WriteString(string? value)
+    public void WriteString(string value)
     {
-        if (value is null)
-        {
-            WriteInt32(0);
-            return;
-        }
-
         var bytes = Encoding.UTF8.GetBytes(value);
         WriteInt32(bytes.Length);
         _stream.Write(bytes);

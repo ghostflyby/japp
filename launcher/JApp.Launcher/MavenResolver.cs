@@ -32,7 +32,7 @@ public static class MavenResolver
 
     private static readonly HttpClient Http = new();
 
-    public static string Resolve(string? repository, string? group, string? artifact, string? version, string? classifier)
+    public static string Resolve(string? repository, string group, string artifact, string version, string? classifier)
     {
         switch (repository)
         {
@@ -43,9 +43,6 @@ public static class MavenResolver
             default:
                 throw new ArgumentException("Unknown repo: " + repository);
         }
-
-        if (group is null || artifact is null || version is null)
-            throw new ArgumentException($"Incomplete maven reference: {group}:{artifact}:{version}");
 
         var fileName = classifier is null
             ? $"{artifact}-{version}.jar"

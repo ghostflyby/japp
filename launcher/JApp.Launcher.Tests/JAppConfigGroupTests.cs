@@ -82,4 +82,62 @@ public static class JAppConfigGroupTests
 
         Assert.Equal(["m1=m2"], root.AddReads);
     }
+
+    private static JAppConfigGroup ReadGroup(Action<LittleEndianWriter> writeFields)
+    {
+        var writer = new LittleEndianWriter();
+        writer.WriteInt32(JAppConfigGroup.MagicNumber);
+        writeFields(writer);
+        writer.WriteByte((byte)JAppConfigGroup.Field.End);
+        return JAppConfigGroup.ReadFrom(writer.ToArray());
+    }
+
+    [Fact]
+    public static void ReadFromParsesMavenReference()
+    {
+        var group = ReadGroup(writer =>
+        {
+            writer.WriteByte((byte)JAppConfigGroup.Field.ModulePath);
+            writer.WriteInt32(1);
+            writer.WriteByte(JAppResourceGroupReference.MagicNumber);
+            writer.WriteByte(JAppResourceGroupReference.Maven.Id);
+            writer.WriteString("lib");
+            writer.WriteInt32(0); // repository: null (central)
+            writer.WriteString("com.example");
+            writer.WriteString("lib");
+            writer.WriteString("1.0");
+            writer.WriteInt32(0); // classifier: null
+        });
+
+        var reference = Assert.IsType<JAppResourceGroupReference.Maven>(Assert.Single(group.ModulePath));
+        Assert.Equal("lib", reference.Name);
+        Assert.Null(reference.Repository);
+        Assert.Equal("com.example", reference.Group);
+        Assert.Equal("lib", reference.Artifact);
+        Assert.Equal("1.0", reference.Version);
+        Assert.Null(reference.Classifier);
+    }
+
+    [Fact]
+    public static void ReadFromRejectsIncompleteMavenReference()
+    {
+        byte[] Bytes()
+        {
+            var writer = new LittleEndianWriter();
+            writer.WriteInt32(JAppConfigGroup.MagicNumber);
+            writer.WriteByte((byte)JAppConfigGroup.Field.ModulePath);
+            writer.WriteInt32(1);
+            writer.WriteByte(JAppResourceGroupReference.MagicNumber);
+            writer.WriteByte(JAppResourceGroupReference.Maven.Id);
+            writer.WriteString("lib");
+            writer.WriteInt32(0); // repository
+            writer.WriteInt32(0); // group: missing coordinate
+            writer.WriteInt32(0); // artifact
+            writer.WriteInt32(0); // version
+            writer.WriteByte((byte)JAppConfigGroup.Field.End);
+            return writer.ToArray();
+        }
+
+        Assert.Throws<IOException>(() => JAppConfigGroup.ReadFrom(Bytes()));
+    }
 }
