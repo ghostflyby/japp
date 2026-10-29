@@ -24,13 +24,27 @@
 
 namespace JApp.Launcher;
 
+// Ported from src/main/java/org/glavo/japp/Main.java (mode dispatch) and the
+// argument loop of src/main/java/org/glavo/japp/launcher/Launcher.java. Exit
+// codes follow the Java launcher: 0 for help/success, 1 for usage errors and
+// no-suitable-Java; unlike the Java loop, positional arguments after the japp
+// file are forwarded to the application (the documented intent, matching
+// EmbeddedLauncher) instead of overwriting the file name.
+//
+// Dual launch modes: a bare launcher keeps the Java-compatible CLI; an
+// executable with an embedded archive is TRANSPARENT by default — every
+// argument reaches the application verbatim (JVM flags go through the
+// JVM-native JDK_JAVA_OPTIONS) — and the single reserved first token `--japp`
+// opens the full launcher CLI, where `-J` options and the `--` separator
+// apply.
+
 internal static class CommandLine
 {
     public static int Run(string[] args)
     {
         try
         {
-            return RunInternal(args);
+            return Run(args, EmbeddedPath());
         }
         catch (Exception exception)
         {
@@ -39,15 +53,32 @@ internal static class CommandLine
         }
     }
 
-    private static int RunInternal(string[] args)
+    private static string? EmbeddedPath() =>
+        Environment.ProcessPath is { } self && JAppLauncherMetadata.HasEmbeddedArchive(self) ? self : null;
+
+    internal static int Run(string[] args, string? embeddedPath) => Run(args, embeddedPath, Launcher.Run);
+
+    internal static int Run(
+        string[] args, string? embeddedPath,
+        Func<string, IReadOnlyList<string>, IReadOnlyList<string>, int> runApp)
     {
-        if (args.Length == 0)
+        if (embeddedPath is not null)
+        {
+            if (args.Length == 0 || args[0] != "--japp")
+                return runApp(embeddedPath, [], args);
+
+            args = args[1..];
+            if (args.Length == 0)
+            {
+                PrintHelpMessage(Console.Out);
+                return 0;
+            }
+        }
+        else if (args.Length == 0)
         {
             PrintHelpMessage(Console.Out);
             return 0;
         }
-
-        var commandArgs = args[1..];
 
         switch (args[0])
         {
@@ -64,7 +95,7 @@ internal static class CommandLine
                 return 0;
 
             case "run":
-                return RunCommand(commandArgs);
+                return RunCommand(args[1..], embeddedPath, runApp);
 
             case "list-java":
                 ListJava();
@@ -77,14 +108,25 @@ internal static class CommandLine
         }
     }
 
-    private static int RunCommand(string[] args)
+    private static int RunCommand(
+        string[] args, string? embeddedPath,
+        Func<string, IReadOnlyList<string>, IReadOnlyList<string>, int> runApp)
     {
         var jvmOptions = new List<string>();
         string? jappFile = null;
         var appArgs = new List<string>();
 
-        foreach (var arg in args)
+        for (var i = 0; i < args.Length; i++)
         {
+            var arg = args[i];
+
+            // Everything after the separator is verbatim application input.
+            if (arg == "--")
+            {
+                appArgs.AddRange(args[(i + 1)..]);
+                break;
+            }
+
             if (jappFile is not null)
             {
                 appArgs.Add(arg);
@@ -106,11 +148,20 @@ internal static class CommandLine
                         Console.Error.WriteLine("Unknown option: " + arg);
                         return 1;
                     }
+                    else if (embeddedPath is not null && !File.Exists(arg))
+                    {
+                        // With an embedded archive a positional that names no
+                        // existing file is an application argument, not a typo
+                        // for the archive path.
+                        appArgs.Add(arg);
+                    }
                     else
                         jappFile = arg;
                     break;
             }
         }
+
+        jappFile ??= embeddedPath;
 
         if (jappFile is null)
         {
@@ -118,7 +169,7 @@ internal static class CommandLine
             return 1;
         }
 
-        return Launcher.Run(Path.GetFullPath(jappFile), jvmOptions, appArgs);
+        return runApp(Path.GetFullPath(jappFile), jvmOptions, appArgs);
     }
 
     private static void ListJava()

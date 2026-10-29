@@ -115,4 +115,31 @@ public static class JAppLauncherMetadataTests
 
         Assert.Throws<IOException>(() => JAppLauncherMetadata.ReadFile(file));
     }
+
+    [Fact]
+    public static void HasEmbeddedArchiveDetectsTrailerAtPhysicalEnd()
+    {
+        Assert.True(JAppLauncherMetadata.HasEmbeddedArchive(
+            WriteTempFile(TestJapp.BuildFile(SampleGroup(), 32))));
+    }
+
+    [Fact]
+    public static void HasEmbeddedArchiveDetectsTrailerBeforeTrailingZip()
+    {
+        Assert.True(JAppLauncherMetadata.HasEmbeddedArchive(
+            WriteTempFile(TestJapp.BuildFile(SampleGroup(), 32, zipSuffix: TestJapp.Eocd()))));
+    }
+
+    [Fact]
+    public static void HasEmbeddedArchiveRejectsFilesWithoutTrailer()
+    {
+        Assert.False(JAppLauncherMetadata.HasEmbeddedArchive(WriteTempFile(new byte[100])));
+        Assert.False(JAppLauncherMetadata.HasEmbeddedArchive(WriteTempFile([1, 2, 3])));
+
+        // A trailing zip alone (no FileEnd before it) is not an archive.
+        var zipOnly = new List<byte>();
+        zipOnly.AddRange(new byte[100]);
+        zipOnly.AddRange(TestJapp.Eocd());
+        Assert.False(JAppLauncherMetadata.HasEmbeddedArchive(WriteTempFile([.. zipOnly])));
+    }
 }

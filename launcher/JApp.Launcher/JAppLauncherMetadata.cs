@@ -160,6 +160,44 @@ public sealed class JAppLauncherMetadata
         return new JAppLauncherMetadata(baseOffset, bootMetadataOffset, launcherMetadataOffset - bootMetadataOffset, group);
     }
 
+    /// <summary>True when the file carries a japp archive: a FileEnd trailer
+    /// at the physical end, or before a single trailing zip (the
+    /// self-contained distribution shape). Only the trailer position is
+    /// probed — the metadata itself is not parsed.</summary>
+    public static bool HasEmbeddedArchive(string file)
+    {
+        try
+        {
+            using var stream = new FileStream(file, FileMode.Open, FileAccess.Read, FileShare.Read);
+            long fileSize = stream.Length;
+            if (fileSize < FileEndSize)
+                return false;
+
+            var tail = new byte[FileEndSize];
+            stream.Position = fileSize - FileEndSize;
+            stream.ReadExactly(tail);
+
+            if (BinaryPrimitives.ReadInt32LittleEndian(tail) == FileEndMagicNumber)
+                return true;
+
+            long endZipSize = GetEndZipSize(tail);
+            if (endZipSize <= 0 || endZipSize >= fileSize)
+                return false;
+
+            var strippedSize = fileSize - endZipSize;
+            if (strippedSize < FileEndSize)
+                return false;
+
+            stream.Position = strippedSize - FileEndSize;
+            stream.ReadExactly(tail, 0, 4);
+            return BinaryPrimitives.ReadInt32LittleEndian(tail) == FileEndMagicNumber;
+        }
+        catch (Exception exception) when (exception is IOException or UnauthorizedAccessException)
+        {
+            return false;
+        }
+    }
+
     private static byte[] ReadFully(FileStream stream, long position, int size)
     {
         var buffer = new byte[size];
