@@ -32,7 +32,9 @@ public static class MavenResolver
 
     private static readonly HttpClient Http = new();
 
-    public static string Resolve(string? repository, string group, string artifact, string version, string? classifier)
+    public static async Task<string> ResolveAsync(
+        string? repository, string group, string artifact, string version, string? classifier,
+        CancellationToken cancellationToken = default)
     {
         switch (repository)
         {
@@ -59,9 +61,9 @@ public static class MavenResolver
             throw new IOException(fileName + " not exists or is not a regular file");
 
         var url = $"{CentralUrl}/{group.Replace('.', '/')}/{artifact}/{version}/{fileName}";
-        var data = Http.GetByteArrayAsync(url).GetAwaiter().GetResult();
+        var data = await Http.GetByteArrayAsync(url, cancellationToken).ConfigureAwait(false);
 
-        var expectedHash = TryDownloadSha1(url + ".sha1");
+        var expectedHash = await TryDownloadSha1Async(url + ".sha1", cancellationToken).ConfigureAwait(false);
         if (expectedHash is not null)
         {
             var actual = SHA1.HashData(data);
@@ -77,12 +79,11 @@ public static class MavenResolver
         return file;
     }
 
-    private static byte[]? TryDownloadSha1(string url)
+    private static async Task<byte[]?> TryDownloadSha1Async(string url, CancellationToken cancellationToken)
     {
         try
         {
-            var text = Http.GetStringAsync(url).GetAwaiter().GetResult();
-            text = text.Trim();
+            var text = (await Http.GetStringAsync(url, cancellationToken).ConfigureAwait(false)).Trim();
             if (text.Length < 40)
                 return null;
 

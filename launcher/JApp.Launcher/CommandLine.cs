@@ -40,15 +40,15 @@ namespace JApp.Launcher;
 
 internal static class CommandLine
 {
-    public static int Run(string[] args)
+    public static async Task<int> RunAsync(string[] args)
     {
         try
         {
-            return Run(args, EmbeddedPath());
+            return await RunAsync(args, EmbeddedPath()).ConfigureAwait(false);
         }
         catch (Exception exception)
         {
-            Console.Error.WriteLine("Error: " + exception.Message);
+            await Console.Error.WriteLineAsync("Error: " + exception.Message);
             return 1;
         }
     }
@@ -56,16 +56,17 @@ internal static class CommandLine
     private static string? EmbeddedPath() =>
         Environment.ProcessPath is { } self && JAppLauncherMetadata.HasEmbeddedArchive(self) ? self : null;
 
-    internal static int Run(string[] args, string? embeddedPath) => Run(args, embeddedPath, Launcher.Run);
+    internal static Task<int> RunAsync(string[] args, string? embeddedPath) =>
+        RunAsync(args, embeddedPath, Launcher.RunAsync);
 
-    internal static int Run(
+    internal static async Task<int> RunAsync(
         string[] args, string? embeddedPath,
-        Func<string, IReadOnlyList<string>, IReadOnlyList<string>, int> runApp)
+        Func<string, IReadOnlyList<string>, IReadOnlyList<string>, Task<int>> runApp)
     {
         if (embeddedPath is not null)
         {
             if (args.Length == 0 || args[0] != "--japp")
-                return runApp(embeddedPath, [], args);
+                return await runApp(embeddedPath, [], args).ConfigureAwait(false);
 
             args = args[1..];
             if (args.Length == 0)
@@ -95,22 +96,22 @@ internal static class CommandLine
                 return 0;
 
             case "run":
-                return RunCommand(args[1..], embeddedPath, runApp);
+                return await RunCommand(args[1..], embeddedPath, runApp).ConfigureAwait(false);
 
             case "list-java":
-                ListJava();
+                await ListJava().ConfigureAwait(false);
                 return 0;
 
             default:
-                Console.Error.WriteLine("Unsupported mode: " + args[0]);
+                await Console.Error.WriteLineAsync("Unsupported mode: " + args[0]);
                 PrintHelpMessage(Console.Error);
                 return 1;
         }
     }
 
-    private static int RunCommand(
+    private static async Task<int> RunCommand(
         string[] args, string? embeddedPath,
-        Func<string, IReadOnlyList<string>, IReadOnlyList<string>, int> runApp)
+        Func<string, IReadOnlyList<string>, IReadOnlyList<string>, Task<int>> runApp)
     {
         var jvmOptions = new List<string>();
         string? jappFile = null;
@@ -145,7 +146,7 @@ internal static class CommandLine
                         jvmOptions.Add(arg[2..]);
                     else if (arg.StartsWith('-'))
                     {
-                        Console.Error.WriteLine("Unknown option: " + arg);
+                        await Console.Error.WriteLineAsync("Unknown option: " + arg);
                         return 1;
                     }
                     else if (embeddedPath is not null && !File.Exists(arg))
@@ -169,12 +170,12 @@ internal static class CommandLine
             return 1;
         }
 
-        return runApp(Path.GetFullPath(jappFile), jvmOptions, appArgs);
+        return await runApp(Path.GetFullPath(jappFile), jvmOptions, appArgs).ConfigureAwait(false);
     }
 
-    private static void ListJava()
+    private static async Task ListJava()
     {
-        var javas = JavaFinder.LocateAll();
+        var javas = await JavaFinder.LocateAllAsync().ConfigureAwait(false);
         if (javas.Count == 0)
         {
             Console.WriteLine("Java runtime not found");

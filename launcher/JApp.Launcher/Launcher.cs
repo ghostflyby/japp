@@ -25,22 +25,22 @@ internal static class Launcher
 {
     private const string BootLauncherModule = "org.glavo.japp.boot";
 
-    public static int Run(string jappFile, IReadOnlyList<string> jvmOptions, IReadOnlyList<string> args)
+    public static async Task<int> RunAsync(string jappFile, IReadOnlyList<string> jvmOptions, IReadOnlyList<string> args)
     {
         var config = JAppLauncherMetadata.ReadFile(jappFile);
         var group = config.Group;
 
-        var found = JavaFinder.Search(group);
+        var found = await JavaFinder.SearchAsync(group).ConfigureAwait(false);
         if (found is null)
         {
-            Console.Error.WriteLine("Error: Unable to find suitable Java");
-            Console.Error.WriteLine("Condition: " + (group.Condition is null
+            await Console.Error.WriteLineAsync("Error: Unable to find suitable Java");
+            await Console.Error.WriteLineAsync("Condition: " + (group.Condition is null
                 ? "(none)"
                 : ConditionParser.Parse(group.Condition).ToString()));
-            Console.Error.WriteLine("Java:");
+            await Console.Error.WriteLineAsync("Java:");
 
-            foreach (var (jvm, jvmContext) in JavaFinder.LocateAll())
-                Console.Error.WriteLine($"  - {jvm.Executable.Path} ({jvmContext})");
+            foreach (var (jvm, jvmContext) in await JavaFinder.LocateAllAsync().ConfigureAwait(false))
+                await Console.Error.WriteLineAsync($"  - {jvm.Executable.Path} ({jvmContext})");
 
             return 1;
         }
@@ -49,17 +49,17 @@ internal static class Launcher
 
         group.Resolve(context);
 
-        var command = BuildCommand(
+        var command = await BuildCommandAsync(
             java.Executable.Path, context, group, jappFile, config, jvmOptions, args,
-            BootJar.ResolveModulePath());
+            BootJar.ResolveModulePath()).ConfigureAwait(false);
 
-        return JavaCommand.Run(command);
+        return await JavaCommand.RunAsync(command).ConfigureAwait(false);
     }
 
     /// <summary>Assembles the java command line in the Java launcher's exact
     /// order; the boot args blob is built alongside because the
     /// enable-native-access handling feeds both.</summary>
-    internal static List<string> BuildCommand(
+    internal static async Task<List<string>> BuildCommandAsync(
         string javaPath, JvmContext context, JAppConfigGroup group, string jappFile, JAppLauncherMetadata config,
         IReadOnlyList<string> jvmOptions, IReadOnlyList<string> appArgs, string bootModulePath)
     {
@@ -110,8 +110,10 @@ internal static class Launcher
                 enablePreview = true;
         }
 
-        bootArgs.WriteClassOrModulePath(BootArgs.Field.ModulePath, release, group.ModulePath);
-        bootArgs.WriteClassOrModulePath(BootArgs.Field.ClassPath, release, group.ClassPath);
+        await bootArgs.WriteClassOrModulePathAsync(BootArgs.Field.ModulePath, release, group.ModulePath)
+            .ConfigureAwait(false);
+        await bootArgs.WriteClassOrModulePathAsync(BootArgs.Field.ClassPath, release, group.ClassPath)
+            .ConfigureAwait(false);
 
         bootArgs.WriteMainClass(group.MainClass);
         bootArgs.WriteMainModule(group.MainModule);

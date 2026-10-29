@@ -39,9 +39,10 @@ public static class JavaFinder
     // runtime probe (a child java process each) is pure startup latency here.
     private static readonly JdkFinder Finder = JdkFinder.Default with { ProbeRuntimeProperties = false };
 
-    public static (Jvm Jvm, JvmContext Context)? Search(JAppConfigGroup config)
+    public static async Task<(Jvm Jvm, JvmContext Context)?> SearchAsync(
+        JAppConfigGroup config, CancellationToken cancellationToken = default)
     {
-        foreach (var jvm in Finder.Locate())
+        foreach (var jvm in await Finder.LocateAsync(cancellationToken).ConfigureAwait(false))
         {
             var context = TryCreateContext(jvm);
             if (context is not null && config.CanApply(context))
@@ -51,10 +52,11 @@ public static class JavaFinder
         return null;
     }
 
-    public static IReadOnlyList<(Jvm Jvm, JvmContext Context)> LocateAll()
+    public static async Task<IReadOnlyList<(Jvm Jvm, JvmContext Context)>> LocateAllAsync(
+        CancellationToken cancellationToken = default)
     {
         var result = new List<(Jvm, JvmContext)>();
-        foreach (var jvm in Finder.Locate())
+        foreach (var jvm in await Finder.LocateAsync(cancellationToken).ConfigureAwait(false))
         {
             var context = TryCreateContext(jvm);
             if (context is not null)

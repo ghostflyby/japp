@@ -63,18 +63,24 @@ public static class BootArgs
                 _writer.WriteString(value);
         }
 
-        public void WriteClassOrModulePath(
+        public async Task WriteClassOrModulePathAsync(
             Field field, int release, List<JAppResourceGroupReference> references,
-            Func<JAppResourceGroupReference.Maven, string>? resolveMaven = null)
+            Func<JAppResourceGroupReference.Maven, Task<string>>? resolveMaven = null)
         {
             if (references.Count == 0)
                 return;
 
-            resolveMaven ??= maven => Path.GetFullPath(MavenResolver.Resolve(
-                maven.Repository, maven.Group, maven.Artifact, maven.Version, maven.Classifier));
+            resolveMaven ??= async maven => Path.GetFullPath(await MavenResolver.ResolveAsync(
+                maven.Repository, maven.Group, maven.Artifact, maven.Version, maven.Classifier).ConfigureAwait(false));
+
+            // Maven resolutions start eagerly so several artifacts download
+            // concurrently while the bytes are still written in file order.
+            List<(JAppResourceGroupReference Reference, Task<string>? Download)> entries = [];
+            foreach (var reference in references)
+                entries.Add((reference, reference is JAppResourceGroupReference.Maven maven ? resolveMaven(maven) : null));
 
             _writer.WriteByte((byte)field);
-            foreach (var reference in references)
+            foreach (var (reference, download) in entries)
             {
                 var name = reference.Name;
 
@@ -98,9 +104,9 @@ public static class BootArgs
 
                     _writer.WriteInt32(-1);
                 }
-                else if (reference is JAppResourceGroupReference.Maven maven)
+                else if (reference is JAppResourceGroupReference.Maven)
                 {
-                    var file = resolveMaven(maven);
+                    var file = await download!.ConfigureAwait(false);
 
                     _writer.WriteByte(IdResolvedReferenceExternal);
                     _writer.WriteString(name);

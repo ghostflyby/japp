@@ -63,13 +63,13 @@ public static class BootArgsTests
 
     [Theory]
     [MemberData(nameof(MultiReleaseCases))]
-    public static void LocalReferencesFilterMultiReleaseIndexes(int release, int[] expectedIndexes)
+    public static async Task LocalReferencesFilterMultiReleaseIndexes(int release, int[] expectedIndexes)
     {
         var reference = new JAppResourceGroupReference.Local(
             "app", 3, new SortedList<int, int> { [9] = 1, [17] = 2, [21] = 3 });
 
         var builder = new BootArgs.Builder();
-        builder.WriteClassOrModulePath(BootArgs.Field.ModulePath, release, [reference]);
+        await builder.WriteClassOrModulePathAsync(BootArgs.Field.ModulePath, release, [reference]);
 
         var expected = Bytes(w =>
         {
@@ -87,15 +87,15 @@ public static class BootArgsTests
     }
 
     [Fact]
-    public static void MavenReferenceResolvesThroughTheInjectedResolver()
+    public static async Task MavenReferenceResolvesThroughTheInjectedResolver()
     {
         var reference = new JAppResourceGroupReference.Maven(
             "lib", null, "g", "a", "1", null);
 
         var builder = new BootArgs.Builder();
-        builder.WriteClassOrModulePath(
+        await builder.WriteClassOrModulePathAsync(
             BootArgs.Field.ClassPath, 17, [reference],
-            resolveMaven: _ => "/repo/g/a/1/a-1.jar");
+            resolveMaven: _ => Task.FromResult("/repo/g/a/1/a-1.jar"));
 
         var expected = Bytes(w =>
         {
@@ -110,11 +110,11 @@ public static class BootArgsTests
     }
 
     [Fact]
-    public static void EmptyListsWriteNothing()
+    public static async Task EmptyListsWriteNothing()
     {
         var builder = new BootArgs.Builder();
         builder.WriteStringListField(BootArgs.Field.AddOpens, []);
-        builder.WriteClassOrModulePath(BootArgs.Field.ModulePath, 17, []);
+        await builder.WriteClassOrModulePathAsync(BootArgs.Field.ModulePath, 17, []);
         builder.WriteEnd();
 
         Assert.Equal([0], builder.ToArray());

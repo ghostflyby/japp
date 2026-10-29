@@ -3,57 +3,57 @@ namespace JApp.Launcher.Tests;
 public static class CommandLineTests
 {
     [Fact]
-    public static void NoArgumentsPrintsHelpAndExitsZero()
+    public static async Task NoArgumentsPrintsHelpAndExitsZero()
     {
-        Assert.Equal(0, CommandLine.Run([]));
+        Assert.Equal(0, await CommandLine.RunAsync([]));
     }
 
     [Theory]
     [InlineData("help")]
     [InlineData("-help")]
     [InlineData("--help")]
-    public static void HelpVariantsExitZero(string mode)
+    public static async Task HelpVariantsExitZero(string mode)
     {
-        Assert.Equal(0, CommandLine.Run([mode]));
+        Assert.Equal(0, await CommandLine.RunAsync([mode]));
     }
 
     [Theory]
     [InlineData("version")]
     [InlineData("--version")]
-    public static void VersionVariantsExitZero(string mode)
+    public static async Task VersionVariantsExitZero(string mode)
     {
-        Assert.Equal(0, CommandLine.Run([mode]));
+        Assert.Equal(0, await CommandLine.RunAsync([mode]));
     }
 
     [Fact]
-    public static void UnknownModeExitsOne()
+    public static async Task UnknownModeExitsOne()
     {
-        Assert.Equal(1, CommandLine.Run(["bogus"]));
+        Assert.Equal(1, await CommandLine.RunAsync(["bogus"]));
     }
 
     [Fact]
-    public static void RunWithoutFileExitsOne()
+    public static async Task RunWithoutFileExitsOne()
     {
-        Assert.Equal(1, CommandLine.Run(["run"]));
+        Assert.Equal(1, await CommandLine.RunAsync(["run"]));
     }
 
     [Fact]
-    public static void RunHelpExitsZero()
+    public static async Task RunHelpExitsZero()
     {
-        Assert.Equal(0, CommandLine.Run(["run", "--help"]));
+        Assert.Equal(0, await CommandLine.RunAsync(["run", "--help"]));
     }
 
     [Fact]
-    public static void RunRejectsUnknownOptionWithOne()
+    public static async Task RunRejectsUnknownOptionWithOne()
     {
-        Assert.Equal(1, CommandLine.Run(["run", "-Xmx1g"]));
+        Assert.Equal(1, await CommandLine.RunAsync(["run", "-Xmx1g"]));
     }
 
     [Fact]
-    public static void RunMissingJappFileSurfacesError()
+    public static async Task RunMissingJappFileSurfacesError()
     {
         // The file does not exist: metadata reading fails, message goes to stderr, exit 1.
-        Assert.Equal(1, CommandLine.Run(["run", "/nonexistent/app.japp"]));
+        Assert.Equal(1, await CommandLine.RunAsync(["run", "/nonexistent/app.japp"]));
     }
 
     // ---- dual launch mode (embedded archive), exercised through the injected run seam ----
@@ -62,10 +62,10 @@ public static class CommandLineTests
 
     private static (string File, IReadOnlyList<string> JvmOptions, IReadOnlyList<string> AppArgs)? _invocation;
 
-    private static int CaptureRun(string file, IReadOnlyList<string> jvmOptions, IReadOnlyList<string> appArgs)
+    private static Task<int> CaptureRun(string file, IReadOnlyList<string> jvmOptions, IReadOnlyList<string> appArgs)
     {
         _invocation = (file, jvmOptions, appArgs);
-        return FakeExitCode;
+        return Task.FromResult(FakeExitCode);
     }
 
     private static void AssertCaptured(string file, string[] jvmOptions, string[] appArgs)
@@ -77,72 +77,72 @@ public static class CommandLineTests
     }
 
     [Fact]
-    public static void EmbeddedModeForwardsEveryArgumentVerbatim()
+    public static async Task EmbeddedModeForwardsEveryArgumentVerbatim()
     {
         _invocation = null;
         Assert.Equal(FakeExitCode,
-            CommandLine.Run(["-J-Xmx1g", "--", "help", "run"], "/tmp/embedded.japp", CaptureRun));
+            await CommandLine.RunAsync(["-J-Xmx1g", "--", "help", "run"], "/tmp/embedded.japp", CaptureRun));
         AssertCaptured("/tmp/embedded.japp", [], ["-J-Xmx1g", "--", "help", "run"]);
 
         _invocation = null;
-        Assert.Equal(FakeExitCode, CommandLine.Run([], "/tmp/embedded.japp", CaptureRun));
+        Assert.Equal(FakeExitCode, await CommandLine.RunAsync([], "/tmp/embedded.japp", CaptureRun));
         AssertCaptured("/tmp/embedded.japp", [], []);
     }
 
     [Fact]
-    public static void EmbeddedGatewayParsesJvmOptionsAndSeparator()
+    public static async Task EmbeddedGatewayParsesJvmOptionsAndSeparator()
     {
         _invocation = null;
         Assert.Equal(FakeExitCode,
-            CommandLine.Run(["--japp", "run", "-J-Xmx4g", "-J-XX:+UseZGC", "--", "a", "b"],
+            await CommandLine.RunAsync(["--japp", "run", "-J-Xmx4g", "-J-XX:+UseZGC", "--", "a", "b"],
                 "/tmp/embedded.japp", CaptureRun));
         AssertCaptured("/tmp/embedded.japp", ["-Xmx4g", "-XX:+UseZGC"], ["a", "b"]);
     }
 
     [Fact]
-    public static void EmbeddedGatewayTreatsNonFilePositionalsAsAppArguments()
+    public static async Task EmbeddedGatewayTreatsNonFilePositionalsAsAppArguments()
     {
         _invocation = null;
         Assert.Equal(FakeExitCode,
-            CommandLine.Run(["--japp", "run", "not-a-file", "arg"], "/tmp/embedded.japp", CaptureRun));
+            await CommandLine.RunAsync(["--japp", "run", "not-a-file", "arg"], "/tmp/embedded.japp", CaptureRun));
         AssertCaptured("/tmp/embedded.japp", [], ["not-a-file", "arg"]);
     }
 
     [Fact]
-    public static void EmbeddedGatewayUsesExistingPositionalAsExplicitFile()
+    public static async Task EmbeddedGatewayUsesExistingPositionalAsExplicitFile()
     {
         var existing = Path.GetTempFileName();
 
         _invocation = null;
         Assert.Equal(FakeExitCode,
-            CommandLine.Run(["--japp", "run", existing, "x"], "/tmp/embedded.japp", CaptureRun));
+            await CommandLine.RunAsync(["--japp", "run", existing, "x"], "/tmp/embedded.japp", CaptureRun));
         AssertCaptured(existing, [], ["x"]);
     }
 
     [Fact]
-    public static void EmbeddedGatewayHelpVariantsExitZero()
+    public static async Task EmbeddedGatewayHelpVariantsExitZero()
     {
-        Assert.Equal(0, CommandLine.Run(["--japp"], "/tmp/embedded.japp", CaptureRun));
-        Assert.Equal(0, CommandLine.Run(["--japp", "help"], "/tmp/embedded.japp", CaptureRun));
-        Assert.Equal(0, CommandLine.Run(["--japp", "run", "--help"], "/tmp/embedded.japp", CaptureRun));
+        Assert.Equal(0, await CommandLine.RunAsync(["--japp"], "/tmp/embedded.japp", CaptureRun));
+        Assert.Equal(0, await CommandLine.RunAsync(["--japp", "help"], "/tmp/embedded.japp", CaptureRun));
+        Assert.Equal(0, await CommandLine.RunAsync(["--japp", "run", "--help"], "/tmp/embedded.japp", CaptureRun));
     }
 
     [Fact]
-    public static void EmbeddedGatewayUnknownModeExitsOne()
+    public static async Task EmbeddedGatewayUnknownModeExitsOne()
     {
-        Assert.Equal(1, CommandLine.Run(["--japp", "bogus"], "/tmp/embedded.japp", CaptureRun));
+        Assert.Equal(1, await CommandLine.RunAsync(["--japp", "bogus"], "/tmp/embedded.japp", CaptureRun));
     }
 
     [Fact]
-    public static void BareModeKeepsJavaCompatibleParsing()
+    public static async Task BareModeKeepsJavaCompatibleParsing()
     {
         _invocation = null;
         Assert.Equal(FakeExitCode,
-            CommandLine.Run(["run", "-J-Xmx1g", "some.japp", "--", "-J-x"], null, CaptureRun));
+            await CommandLine.RunAsync(["run", "-J-Xmx1g", "some.japp", "--", "-J-x"], null, CaptureRun));
         AssertCaptured("some.japp", ["-Xmx1g"], ["-J-x"]);
 
         _invocation = null;
-        Assert.Equal(1, CommandLine.Run(["run", "-Xmx1g"], null, CaptureRun));
+        Assert.Equal(1, await CommandLine.RunAsync(["run", "-Xmx1g"], null, CaptureRun));
         Assert.Null(_invocation);
     }
 }

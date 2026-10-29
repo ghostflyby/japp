@@ -32,10 +32,10 @@ internal static partial class JavaCommand
     private const int ExitCommandNotFound = 127;
     private const int ExitCannotExecute = 126;
 
-    public static int Run(IReadOnlyList<string> commandArgs)
+    public static async Task<int> RunAsync(IReadOnlyList<string> commandArgs)
     {
         if (OperatingSystem.IsWindows())
-            return Spawn(commandArgs);
+            return await SpawnAsync(commandArgs).ConfigureAwait(false);
 
         return Exec(commandArgs);
     }
@@ -62,7 +62,7 @@ internal static partial class JavaCommand
         return errno == 2 ? ExitCommandNotFound : ExitCannotExecute;
     }
 
-    private static int Spawn(IReadOnlyList<string> commandArgs)
+    private static async Task<int> SpawnAsync(IReadOnlyList<string> commandArgs)
     {
         try
         {
@@ -77,17 +77,17 @@ internal static partial class JavaCommand
 
             if (!process.Start())
             {
-                Console.Error.WriteLine($"japp: cannot execute '{commandArgs[0]}'.");
+                await Console.Error.WriteLineAsync($"japp: cannot execute '{commandArgs[0]}'.");
                 return ExitCannotExecute;
             }
 
-            process.WaitForExit();
+            await process.WaitForExitAsync().ConfigureAwait(false);
             return process.ExitCode;
         }
         catch (Exception exception) when (
             exception is InvalidOperationException or Win32Exception)
         {
-            Console.Error.WriteLine($"japp: cannot execute '{commandArgs[0]}': {exception.Message}");
+            await Console.Error.WriteLineAsync($"japp: cannot execute '{commandArgs[0]}': {exception.Message}");
             return ExitCannotExecute;
         }
     }

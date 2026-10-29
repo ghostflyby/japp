@@ -1,3 +1,3 @@
 using JApp.Launcher;
 
-return CommandLine.Run(args);
+return await CommandLine.RunAsync(args);

@@ -18,14 +18,14 @@ public static class LauncherTests
     }
 
     [Fact]
-    public static void CommandOrderMatchesTheJavaLauncher()
+    public static async Task CommandOrderMatchesTheJavaLauncher()
     {
         var group = new JAppConfigGroup { MainClass = "com.example.Main" };
         group.JvmProperties.Add("k=v");
         group.ExtraJvmOptions.Add("-Xmx1g");
         group.ModulePath.Add(new JAppResourceGroupReference.Local("app", 0, null));
 
-        var command = Launcher.BuildCommand(
+        var command = await Launcher.BuildCommandAsync(
             "/usr/bin/java", new JvmContext(17, "linux", "x86-64", "default"), group,
             "/tmp/app.japp", Metadata(), ["-Xmx2g"], ["arg1", "arg2"], "/tmp/boot.jar");
 
@@ -58,13 +58,13 @@ public static class LauncherTests
     }
 
     [Fact]
-    public static void NativeAccessOn17AddsFlagsAndFiltersAllUnnamed()
+    public static async Task NativeAccessOn17AddsFlagsAndFiltersAllUnnamed()
     {
         var group = new JAppConfigGroup();
         group.EnableNativeAccess.Add("ALL-UNNAMED");
         group.EnableNativeAccess.Add("m.x");
 
-        var command = Launcher.BuildCommand(
+        var command = await Launcher.BuildCommandAsync(
             "/usr/bin/java", new JvmContext(17, "linux", "x86-64", "default"), group,
             "/tmp/app.japp", Metadata(), [], [], "/tmp/boot.jar");
 
@@ -95,12 +95,12 @@ public static class LauncherTests
     }
 
     [Fact]
-    public static void NativeAccessOn16UsesForeignRestricted()
+    public static async Task NativeAccessOn16UsesForeignRestricted()
     {
         var group = new JAppConfigGroup();
         group.EnableNativeAccess.Add("m.x");
 
-        var command = Launcher.BuildCommand(
+        var command = await Launcher.BuildCommandAsync(
             "/usr/bin/java", new JvmContext(16, "linux", "x86-64", "default"), group,
             "/tmp/app.japp", Metadata(), [], [], "/tmp/boot.jar");
 
@@ -110,12 +110,12 @@ public static class LauncherTests
     }
 
     [Fact]
-    public static void NativeAccessOn22SkipsPreview()
+    public static async Task NativeAccessOn22SkipsPreview()
     {
         var group = new JAppConfigGroup();
         group.EnableNativeAccess.Add("m.x");
 
-        var command = Launcher.BuildCommand(
+        var command = await Launcher.BuildCommandAsync(
             "/usr/bin/java", new JvmContext(22, "linux", "x86-64", "default"), group,
             "/tmp/app.japp", Metadata(), [], [], "/tmp/boot.jar");
 
