@@ -98,6 +98,9 @@ internal static class CommandLine
             case "run":
                 return await RunCommand(args[1..], embeddedPath, runApp).ConfigureAwait(false);
 
+            case "bundle":
+                return Bundler.Run(args[1..]);
+
             case "list-java":
                 await ListJava().ConfigureAwait(false);
                 return 0;
@@ -192,6 +195,7 @@ internal static class CommandLine
         writer.WriteLine("Usage: japp <mode> [options]");
         writer.WriteLine("Supported mode:");
         writer.WriteLine("  japp run");
+        writer.WriteLine("  japp bundle");
         writer.WriteLine("  japp list-java");
     }
 
