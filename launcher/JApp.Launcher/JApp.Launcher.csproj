@@ -6,6 +6,8 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
     <IsAotCompatible>true</IsAotCompatible>
+    <!-- The execvp LibraryImport generates an unsafe marshalling stub. -->
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <!-- Same executable name as the Rust launcher in native/, so the AOT build
          is a drop-in replacement for it. -->
     <AssemblyName>japp</AssemblyName>
@@ -14,6 +16,10 @@
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
     <Version>0.1.0</Version>
   </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="JdkFind" Version="0.5.2"/>
+  </ItemGroup>
 
   <ItemGroup>
     <InternalsVisibleTo Include="JApp.Launcher.Tests"/>
