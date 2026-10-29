@@ -6,6 +6,10 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
     <IsAotCompatible>true</IsAotCompatible>
+    <!-- No culture-sensitive surface: versions are integer segments, names
+         compare ordinally and paths echo the file system — drop the ICU link
+         and dlopen (same convention as JdkFind). -->
+    <InvariantGlobalization>true</InvariantGlobalization>
     <!-- The execvp LibraryImport generates an unsafe marshalling stub. -->
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <!-- Same executable name as the Rust launcher in native/, so the AOT build
