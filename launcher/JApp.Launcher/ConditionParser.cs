@@ -40,32 +40,25 @@ public sealed class ConditionParser
         return condition;
     }
 
-    internal sealed class Token
+    private sealed class Token
     {
-        internal static readonly Token And = new("&&", 20);
-        internal static readonly Token Or = new("||", 10);
-        internal static readonly Token Not = new("!", 30);
-        internal static readonly Token Left = new("(", -1);
-        internal static readonly Token Right = new(")", -1);
-        internal static readonly Token Colon = new(":", -1);
-        internal static readonly Token Comma = new(",", -1);
+        internal static readonly Token And = new("&&", isLiteral: false);
+        internal static readonly Token Or = new("||", isLiteral: false);
+        internal static readonly Token Not = new("!", isLiteral: false);
+        internal static readonly Token Left = new("(", isLiteral: false);
+        internal static readonly Token Right = new(")", isLiteral: false);
+        internal static readonly Token Colon = new(":", isLiteral: false);
+        internal static readonly Token Comma = new(",", isLiteral: false);
 
         internal readonly string Value;
-        internal readonly int Precedence;
         internal readonly bool IsLiteral;
 
-        internal Token(string value)
+        // The Java original carries a precedence number that nothing reads —
+        // operator levels are hard-wired in Expr1/Expr2 — so it is not ported.
+        internal Token(string value, bool isLiteral)
         {
             Value = value;
-            Precedence = -1;
-            IsLiteral = true;
-        }
-
-        private Token(string value, int precedence)
-        {
-            Value = value;
-            Precedence = precedence;
-            IsLiteral = false;
+            IsLiteral = isLiteral;
         }
 
         public override string ToString() => IsLiteral ? "Literal[" + Value + "]" : Value;
@@ -115,7 +108,7 @@ public sealed class ConditionParser
                 _index++;
             }
 
-            _nextToken = new Token(builder.ToString());
+            _nextToken = new Token(builder.ToString(), isLiteral: true);
         }
         else if (ch == '(')
         {
@@ -164,7 +157,7 @@ public sealed class ConditionParser
             if (endIndex < 0)
                 throw new ArgumentException(_source);
 
-            _nextToken = new Token(_source.Substring(_index + 1, endIndex - _index - 1));
+            _nextToken = new Token(_source.Substring(_index + 1, endIndex - _index - 1), isLiteral: true);
             _index = endIndex + 1;
         }
         else
@@ -263,10 +256,10 @@ public sealed class ConditionParser
                 var sep = Next();
                 var value = Next();
 
-                if (key is not { IsLiteral: true } || sep != Token.Colon || value is not { IsLiteral: true })
-                    throw Fail();
-
-                if (map.TryAdd(key.Value, value.Value) is false)
+                if (key is not { IsLiteral: true }
+                    || sep != Token.Colon
+                    || value is not { IsLiteral: true }
+                    || !map.TryAdd(key.Value, value.Value))
                     throw Fail();
             }
 

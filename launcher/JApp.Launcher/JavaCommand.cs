@@ -19,6 +19,8 @@
 // spawned and awaited. The exec pattern matches the author's JdkFind
 // CommandRunner.
 
+using System.Runtime.Versioning;
+
 namespace JApp.Launcher;
 
 using System.ComponentModel;
@@ -39,9 +41,11 @@ internal static partial class JavaCommand
     }
 
     [LibraryImport("libc", EntryPoint = "execvp", SetLastError = true, StringMarshalling = StringMarshalling.Utf8)]
-    private static partial int Execvp(string file, string?[] argv);
+    [UnsupportedOSPlatform("windows")]
+    private static partial int Execvp(string file, [In] string?[] argv);
 
     /// <summary>Replaces this process; a return means the command could not be executed.</summary>
+    [UnsupportedOSPlatform("windows")]
     private static int Exec(IReadOnlyList<string> commandArgs)
     {
         // execvp(3) requires a NULL-terminated argv.

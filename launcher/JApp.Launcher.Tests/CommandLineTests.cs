@@ -60,31 +60,31 @@ public static class CommandLineTests
 
     private const int FakeExitCode = 7;
 
-    private static (string File, IReadOnlyList<string> JvmOptions, IReadOnlyList<string> AppArgs)? Invocation;
+    private static (string File, IReadOnlyList<string> JvmOptions, IReadOnlyList<string> AppArgs)? _invocation;
 
     private static int CaptureRun(string file, IReadOnlyList<string> jvmOptions, IReadOnlyList<string> appArgs)
     {
-        Invocation = (file, jvmOptions, appArgs);
+        _invocation = (file, jvmOptions, appArgs);
         return FakeExitCode;
     }
 
     private static void AssertCaptured(string file, string[] jvmOptions, string[] appArgs)
     {
-        Assert.NotNull(Invocation);
-        Assert.Equal(Path.GetFullPath(file), Invocation!.Value.File);
-        Assert.Equal(jvmOptions, Invocation.Value.JvmOptions);
-        Assert.Equal(appArgs, Invocation.Value.AppArgs);
+        Assert.NotNull(_invocation);
+        Assert.Equal(Path.GetFullPath(file), _invocation.Value.File);
+        Assert.Equal(jvmOptions, _invocation.Value.JvmOptions);
+        Assert.Equal(appArgs, _invocation.Value.AppArgs);
     }
 
     [Fact]
     public static void EmbeddedModeForwardsEveryArgumentVerbatim()
     {
-        Invocation = null;
+        _invocation = null;
         Assert.Equal(FakeExitCode,
             CommandLine.Run(["-J-Xmx1g", "--", "help", "run"], "/tmp/embedded.japp", CaptureRun));
         AssertCaptured("/tmp/embedded.japp", [], ["-J-Xmx1g", "--", "help", "run"]);
 
-        Invocation = null;
+        _invocation = null;
         Assert.Equal(FakeExitCode, CommandLine.Run([], "/tmp/embedded.japp", CaptureRun));
         AssertCaptured("/tmp/embedded.japp", [], []);
     }
@@ -92,7 +92,7 @@ public static class CommandLineTests
     [Fact]
     public static void EmbeddedGatewayParsesJvmOptionsAndSeparator()
     {
-        Invocation = null;
+        _invocation = null;
         Assert.Equal(FakeExitCode,
             CommandLine.Run(["--japp", "run", "-J-Xmx4g", "-J-XX:+UseZGC", "--", "a", "b"],
                 "/tmp/embedded.japp", CaptureRun));
@@ -102,7 +102,7 @@ public static class CommandLineTests
     [Fact]
     public static void EmbeddedGatewayTreatsNonFilePositionalsAsAppArguments()
     {
-        Invocation = null;
+        _invocation = null;
         Assert.Equal(FakeExitCode,
             CommandLine.Run(["--japp", "run", "not-a-file", "arg"], "/tmp/embedded.japp", CaptureRun));
         AssertCaptured("/tmp/embedded.japp", [], ["not-a-file", "arg"]);
@@ -113,7 +113,7 @@ public static class CommandLineTests
     {
         var existing = Path.GetTempFileName();
 
-        Invocation = null;
+        _invocation = null;
         Assert.Equal(FakeExitCode,
             CommandLine.Run(["--japp", "run", existing, "x"], "/tmp/embedded.japp", CaptureRun));
         AssertCaptured(existing, [], ["x"]);
@@ -136,13 +136,13 @@ public static class CommandLineTests
     [Fact]
     public static void BareModeKeepsJavaCompatibleParsing()
     {
-        Invocation = null;
+        _invocation = null;
         Assert.Equal(FakeExitCode,
             CommandLine.Run(["run", "-J-Xmx1g", "some.japp", "--", "-J-x"], null, CaptureRun));
         AssertCaptured("some.japp", ["-Xmx1g"], ["-J-x"]);
 
-        Invocation = null;
+        _invocation = null;
         Assert.Equal(1, CommandLine.Run(["run", "-Xmx1g"], null, CaptureRun));
-        Assert.Null(Invocation);
+        Assert.Null(_invocation);
     }
 }
