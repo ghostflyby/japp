@@ -14,11 +14,6 @@
  * limitations under the License.
  */
 
-// Process handoff: on Unix the launcher replaces itself with java via execvp
-// (signals reach java directly, no parent shim); on Windows the child is
-// spawned and awaited. The exec pattern matches the author's JdkFind
-// CommandRunner.
-
 using System.Runtime.Versioning;
 
 namespace JApp.Launcher;
@@ -27,6 +22,10 @@ using System.ComponentModel;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
 
+/// <summary>Process handoff: on Unix the launcher replaces itself with java
+/// via execvp (signals reach java directly, no parent shim); on Windows the
+/// child is spawned and awaited. The exec pattern matches the author's
+/// JdkFind CommandRunner.</summary>
 internal static partial class JavaCommand
 {
     private const int ExitCommandNotFound = 127;
@@ -35,7 +34,14 @@ internal static partial class JavaCommand
     public static async Task<int> RunAsync(IReadOnlyList<string> commandArgs)
     {
         if (OperatingSystem.IsWindows())
+        {
+            // In-process launch keeps the pid like the Unix exec path; a
+            // failure before main is invoked falls through to spawning.
+            if (JniLauncher.TryRun(commandArgs) is { } exitCode)
+                return exitCode;
+
             return await SpawnAsync(commandArgs).ConfigureAwait(false);
+        }
 
         return Exec(commandArgs);
     }

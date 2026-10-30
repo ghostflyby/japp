@@ -26,8 +26,10 @@ with the Java launcher.
 * **Maven dependencies** resolve at launch time: `local` reuses the user's
   `~/.m2/repository` (downloading missing artifacts into it), while `central` (the default)
   keeps its own platform cache so the bytes always match what Central published.
-* On Unix the launcher **replaces itself** with the java process; on Windows it spawns
-  the child and forwards its exit code (~10–15 MB resident while waiting).
+* On Unix the launcher **replaces itself** with the java process; on Windows it hosts the
+  JVM in-process via `jvm.dll` (same pid, exit code and Ctrl+C semantics, emulating the
+  java.exe launcher behavior), falling back to spawning `java.exe` when the JVM cannot
+  be loaded.
 
 ## Build
 
