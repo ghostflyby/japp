@@ -15,10 +15,6 @@
  * limitations under the License.
  */
 
-// Rewritten from src/main/java/org/glavo/japp/maven/{MavenResolver,MavenRepository}.java:
-// unlike the Java side's private cache, artifacts live in (and are read from)
-// the standard ~/.m2/repository layout, verified against the published .sha1.
-
 namespace JApp.Launcher;
 
 using System.Security.Cryptography;
@@ -27,40 +23,68 @@ public static class MavenResolver
 {
     private const string CentralUrl = "https://repo1.maven.org/maven2";
 
-    private static readonly string LocalRepository =
-        Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), ".m2", "repository");
+    private static readonly string UserProfile =
+        Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
+
+    private static readonly string LocalRepository = Path.Combine(UserProfile, ".m2", "repository");
 
     private static readonly HttpClient Http = new();
 
-    public static async Task<string> ResolveAsync(
+    /// <summary>Resolves a Maven reference to a local jar file. <c>local</c>
+    /// reuses the user's default repository — whatever the coordinate yields
+    /// is used regardless of provenance — and backfills missing artifacts
+    /// into it from Central; <c>central</c> (the default) uses a private
+    /// cache under the platform cache directory and never consults the user
+    /// repository, so the bytes always match what Central published.
+    /// Downloads are verified against the published .sha1.</summary>
+    public static Task<string> ResolveAsync(
         string? repository, string group, string artifact, string version, string? classifier,
-        CancellationToken cancellationToken = default)
-    {
-        switch (repository)
+        CancellationToken cancellationToken = default) =>
+        repository switch
         {
-            case null:
-            case "central":
-            case "local":
-                break;
-            default:
-                throw new ArgumentException("Unknown repo: " + repository);
-        }
+            null or "central" => ResolveCentralAsync(group, artifact, version, classifier, cancellationToken),
+            "local" => ResolveLocalAsync(group, artifact, version, classifier, cancellationToken),
+            _ => throw new ArgumentException("Unknown repo: " + repository),
+        };
 
-        var fileName = classifier is null
-            ? $"{artifact}-{version}.jar"
-            : $"{artifact}-{version}-{classifier}.jar";
-
-        var directory = Path.Combine(LocalRepository,
-            group.Replace('.', Path.DirectorySeparatorChar), artifact, version);
-        var file = Path.Combine(directory, fileName);
-
+    private static async Task<string> ResolveLocalAsync(
+        string group, string artifact, string version, string? classifier, CancellationToken cancellationToken)
+    {
+        var file = LayoutPath(LocalRepository, group, artifact, version, classifier);
         if (File.Exists(file))
             return file;
 
-        if (repository == "local")
-            throw new IOException(fileName + " not exists or is not a regular file");
+        return await DownloadAsync(LocalRepository, group, artifact, version, classifier, cancellationToken)
+            .ConfigureAwait(false);
+    }
 
-        var url = $"{CentralUrl}/{group.Replace('.', '/')}/{artifact}/{version}/{fileName}";
+    private static async Task<string> ResolveCentralAsync(
+        string group, string artifact, string version, string? classifier, CancellationToken cancellationToken)
+    {
+        var root = Path.Combine(PlatformCacheDirectory(), "maven", "central");
+        var file = LayoutPath(root, group, artifact, version, classifier);
+        if (File.Exists(file))
+            return file;
+
+        return await DownloadAsync(root, group, artifact, version, classifier, cancellationToken)
+            .ConfigureAwait(false);
+    }
+
+    internal static string LayoutPath(string root, string group, string artifact, string version, string? classifier)
+    {
+        var fileName = classifier is null
+            ? $"{artifact}-{version}.jar"
+            : $"{artifact}-{version}-{classifier}.jar";
+        return Path.Combine(root, group.Replace('.', Path.DirectorySeparatorChar), artifact, version, fileName);
+    }
+
+    private static async Task<string> DownloadAsync(
+        string root, string group, string artifact, string version, string? classifier,
+        CancellationToken cancellationToken)
+    {
+        var file = LayoutPath(root, group, artifact, version, classifier);
+        var url = $"{CentralUrl}/{group.Replace('.', '/')}/{artifact}/{version}/{Path.GetFileName(file)}";
+
         var data = await Http.GetByteArrayAsync(url, cancellationToken).ConfigureAwait(false);
 
         var expectedHash = await TryDownloadSha1Async(url + ".sha1", cancellationToken).ConfigureAwait(false);
@@ -71,12 +95,26 @@ public static class MavenResolver
                 throw new IOException($"Failed while verifying {url}");
         }
 
+        var directory = Path.GetDirectoryName(file)!;
         Directory.CreateDirectory(directory);
         var temp = Path.Combine(directory, Path.GetRandomFileName());
         File.WriteAllBytes(temp, data);
         File.Move(temp, file, overwrite: true);
 
         return file;
+    }
+
+    private static string PlatformCacheDirectory()
+    {
+        if (OperatingSystem.IsMacOS())
+            return Path.Combine(UserProfile, "Library", "Caches", "japp");
+
+        if (OperatingSystem.IsWindows())
+            return Path.Combine(
+                Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "japp", "cache");
+
+        var xdgCache = Environment.GetEnvironmentVariable("XDG_CACHE_HOME");
+        return Path.Combine(string.IsNullOrEmpty(xdgCache) ? Path.Combine(UserProfile, ".cache") : xdgCache, "japp");
     }
 
     private static async Task<byte[]?> TryDownloadSha1Async(string url, CancellationToken cancellationToken)

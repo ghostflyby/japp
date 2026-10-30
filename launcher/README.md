@@ -23,9 +23,9 @@ with the Java launcher.
 * **JVM discovery** uses [JdkFind](https://www.nuget.org/packages/JdkFind) (`JAVA_HOME`
   first, then PATH, `/Library/Java`, Homebrew, SDKMAN, asdf, Scoop, …). The first
   runtime satisfying the root condition wins, e.g. `java(version: 21) && java(os: linux|macos)`.
-* **Maven dependencies** (`[type=maven,bundle=false]…` items) resolve against the
-  standard `~/.m2/repository` layout; missing artifacts are downloaded from Maven
-  Central with checksum verification.
+* **Maven dependencies** resolve at launch time: `local` reuses the user's
+  `~/.m2/repository` (downloading missing artifacts into it), while `central` (the default)
+  keeps its own platform cache so the bytes always match what Central published.
 * On Unix the launcher **replaces itself** with the java process; on Windows it spawns
   the child and forwards its exit code (~10–15 MB resident while waiting).
 
