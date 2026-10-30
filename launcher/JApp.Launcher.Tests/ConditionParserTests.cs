@@ -54,7 +54,7 @@ public static class ConditionParserTests
         var condition = ConditionParser.Parse("!java(os: linux) && java(arch: x86-64)");
 
         Assert.True(condition.Test(Windows21Arm64)); // !(false && true)
-        Assert.False(condition.Test(Linux17X64)); // !(true && true)
+        Assert.False(condition.Test(Linux17X64));    // !(true && true)
     }
 
     [Fact]

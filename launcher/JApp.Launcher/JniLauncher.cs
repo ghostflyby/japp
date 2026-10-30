@@ -37,7 +37,10 @@ internal static class JniLauncher
     private const string BootMainClass = "org/glavo/japp/boot/JAppBootLauncher";
 
     internal sealed record LaunchPlan(
-        IReadOnlyList<string> VmOptions, string ModulePath, string Module, IReadOnlyList<string> AppArgs);
+        IReadOnlyList<string> VmOptions,
+        string ModulePath,
+        string Module,
+        IReadOnlyList<string> AppArgs);
 
     /// <summary>Splits the java command line into the JNI launch shape:
     /// everything up to `--module` is a VM option except the `--module-path`
@@ -258,7 +261,7 @@ internal static class JniLauncher
             // "main" Java thread, exactly like java.exe's JavaMain.
             Stage("loading " + jvmLibrary);
             var library = NativeLibrary.Load(jvmLibrary);
-            var createJavaVm = (delegate* unmanaged<IntPtr*, IntPtr*, JavaVMInitArgs*, int>)
+            var createJavaVm = (delegate* unmanaged<IntPtr*, IntPtr*, JavaVmInitArgs*, int>)
                 NativeLibrary.GetExport(library, "JNI_CreateJavaVM").ToPointer();
 
             var optionPointers = options.Select(option => Marshal.StringToCoTaskMemUTF8(option)).ToArray();
@@ -270,7 +273,7 @@ internal static class JniLauncher
                 Marshal.WriteIntPtr(optionsBlock, pointerSize * 2 * i + pointerSize, IntPtr.Zero);
             }
 
-            var args = new JavaVMInitArgs
+            var args = new JavaVmInitArgs
             {
                 Version = JniVersion18,
                 NOptions = optionPointers.Length,
@@ -279,8 +282,8 @@ internal static class JniLauncher
             };
 
             Stage("creating vm with " + optionPointers.Length + " options");
-            IntPtr _vm = IntPtr.Zero, env = IntPtr.Zero;
-            if (createJavaVm(&_vm, &env, &args) != 0)
+            IntPtr vm = IntPtr.Zero, env = IntPtr.Zero;
+            if (createJavaVm(&vm, &env, &args) != 0)
             {
                 Stage("vm creation failed");
                 return null;
@@ -359,7 +362,7 @@ internal static class JniLauncher
     private static readonly byte[] StringClassNameBytes = NullTerminated("java/lang/String");
 
     [StructLayout(LayoutKind.Sequential)]
-    private struct JavaVMInitArgs
+    private struct JavaVmInitArgs
     {
         public int Version;
         public int NOptions;
@@ -373,26 +376,26 @@ internal static class JniLauncher
     [StructLayout(LayoutKind.Sequential)]
     internal unsafe struct JniNativeInterface
     {
-        private fixed long _reserved[4];                                                     // 0..3
-        private nint _getVersion;                                                            // 4
-        private nint _defineClass;                                                           // 5
-        public delegate* unmanaged<IntPtr, byte*, IntPtr> FindClass;                         // 6
-        private fixed long _7_to_14[8];                                                      // 7..14
-        public delegate* unmanaged<IntPtr, IntPtr> ExceptionOccurred;                        // 15
-        public delegate* unmanaged<IntPtr, void> ExceptionDescribe;                          // 16
-        private fixed long _17_to_112[96];                                                   // 17..112
-        public delegate* unmanaged<IntPtr, IntPtr, byte*, byte*, IntPtr> GetStaticMethodID;  // 113
-        private fixed long _114_to_142[29];                                                  // 114..142
+        private fixed long _reserved[4];                                                        // 0..3
+        private nint _getVersion;                                                               // 4
+        private nint _defineClass;                                                              // 5
+        public delegate* unmanaged<IntPtr, byte*, IntPtr> FindClass;                            // 6
+        private fixed long _7_to_14[8];                                                         // 7..14
+        public delegate* unmanaged<IntPtr, IntPtr> ExceptionOccurred;                           // 15
+        public delegate* unmanaged<IntPtr, void> ExceptionDescribe;                             // 16
+        private fixed long _17_to_112[96];                                                      // 17..112
+        public delegate* unmanaged<IntPtr, IntPtr, byte*, byte*, IntPtr> GetStaticMethodID;     // 113
+        private fixed long _114_to_142[29];                                                     // 114..142
         public delegate* unmanaged<IntPtr, IntPtr, IntPtr, IntPtr, void> CallStaticVoidMethodA; // 143
-        private nint _getStaticFieldId;                                                      // 144
-        private fixed long _145_to_162[18];                                                  // 145..162
-        private fixed long _163_to_166[4];                                                   // 163..166
-        public delegate* unmanaged<IntPtr, byte*, IntPtr> NewStringUTF;                      // 167
+        private nint _getStaticFieldId;                                                         // 144
+        private fixed long _145_to_162[18];                                                     // 145..162
+        private fixed long _163_to_166[4];                                                      // 163..166
+        public delegate* unmanaged<IntPtr, byte*, IntPtr> NewStringUTF;                         // 167
 
         // 168..171: GetStringUTFLength, GetStringUTFChars, ReleaseStringUTFChars, GetArrayLength
         private fixed long _168_to_171[4];
-        public delegate* unmanaged<IntPtr, nint, IntPtr, IntPtr, IntPtr> NewObjectArray;     // 172
-        private nint _getObjectArrayElement;                                                 // 173
+        public delegate* unmanaged<IntPtr, nint, IntPtr, IntPtr, IntPtr> NewObjectArray;      // 172
+        private nint _getObjectArrayElement;                                                  // 173
         public delegate* unmanaged<IntPtr, IntPtr, nint, IntPtr, void> SetObjectArrayElement; // 174
     }
 
@@ -400,9 +403,9 @@ internal static class JniLauncher
     [StructLayout(LayoutKind.Sequential)]
     internal unsafe struct JniInvokeInterface
     {
-        private fixed long _reserved[3];                                   // 0..2
-        public delegate* unmanaged<IntPtr, int> DestroyJavaVM;             // 3
-        private nint _attachCurrentThread;                                 // 4
-        public delegate* unmanaged<IntPtr, int> DetachCurrentThread;       // 5
+        private fixed long _reserved[3];                             // 0..2
+        public delegate* unmanaged<IntPtr, int> DestroyJavaVM;       // 3
+        private nint _attachCurrentThread;                           // 4
+        public delegate* unmanaged<IntPtr, int> DetachCurrentThread; // 5
     }
 }

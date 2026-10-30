@@ -5,8 +5,7 @@ single-file NativeAOT executable (`japp`, ~5.5 MB, no .NET runtime required).
 
 The launcher does everything before the JVM starts: reads the japp launcher metadata,
 selects a suitable Java runtime according to the declared conditions, merges the
-config groups, resolves Maven dependencies, and starts the boot module
-(`org.glavo.japp.boot`), which loads the application. The command line is compatible
+config groups, resolves Maven dependencies, and starts the boot module (`org.glavo.japp.boot`), which loads the application. The command line is compatible
 with the Java launcher.
 
 ## How it works
@@ -75,8 +74,8 @@ application verbatim:
 ./myapp --japp list-java
 ```
 
-| Variable | Purpose |
-|---|---|
+| Variable        | Purpose                                                          |
+|-----------------|------------------------------------------------------------------|
 | `JAPP_BOOT_JAR` | Explicit boot module jar path (overrides the self-appended tail) |
 
 ## Development

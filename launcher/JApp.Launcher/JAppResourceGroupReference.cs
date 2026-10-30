@@ -99,7 +99,12 @@ public abstract class JAppResourceGroupReference(string name)
     }
 
     public sealed class Maven(
-        string name, string? repository, string group, string artifact, string version, string? classifier)
+        string name,
+        string? repository,
+        string group,
+        string artifact,
+        string version,
+        string? classifier)
         : JAppResourceGroupReference(name)
     {
         public const byte Id = 1;

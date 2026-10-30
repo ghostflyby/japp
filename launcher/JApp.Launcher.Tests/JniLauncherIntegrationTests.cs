@@ -99,7 +99,7 @@ public static class JniLauncherIntegrationTests
         var plan = JniLauncher.TryTranslate(command);
         Assert.NotNull(plan);
 
-        var result = RunOnVmThread(jvmLibrary!, JniLauncher.PrepareVmOptions(plan!), ["x"]);
+        var result = RunOnVmThread(jvmLibrary, JniLauncher.PrepareVmOptions(plan), ["x"]);
         Assert.Equal(0, result);
     }
 }

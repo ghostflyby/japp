@@ -27,11 +27,11 @@ public static class BundlerTests
         return result;
     }
 
-    private static byte[] RunBundle(byte[] japp, byte[] launcher, out string output)
+    private static byte[] RunBundle(byte[] japp, byte[] launcher)
     {
         var jappPath = WriteTempFile(japp);
         var launcherPath = WriteTempFile(launcher);
-        output = Path.Combine(Path.GetTempPath(), "japp-bundler-out-" + Path.GetRandomFileName());
+        var output = Path.Combine(Path.GetTempPath(), "japp-bundler-out-" + Path.GetRandomFileName());
 
         Assert.Equal(0, Bundler.Run([jappPath, "--launcher", launcherPath, "-o", output]));
         return File.ReadAllBytes(output);
@@ -44,7 +44,7 @@ public static class BundlerTests
         var japp = BuildArchiveFile();
         var jar = TestJapp.Eocd();
 
-        var result = RunBundle(japp, Concat(exe, jar), out _);
+        var result = RunBundle(japp, Concat(exe, jar));
 
         Assert.Equal(Concat(exe, japp, jar), result);
     }
@@ -55,7 +55,7 @@ public static class BundlerTests
         var exe = new byte[100];
         var japp = BuildArchiveFile();
 
-        var result = RunBundle(japp, exe, out _);
+        var result = RunBundle(japp, exe);
 
         Assert.Equal(Concat(exe, japp), result);
     }
@@ -70,7 +70,7 @@ public static class BundlerTests
         var jar = TestJapp.Eocd();
 
         // Base shape: [exe][old archive][jar]
-        var result = RunBundle(newArchive, Concat(exe, oldArchive, jar), out _);
+        var result = RunBundle(newArchive, Concat(exe, oldArchive, jar));
 
         Assert.Equal(Concat(exe, newArchive, jar), result);
     }

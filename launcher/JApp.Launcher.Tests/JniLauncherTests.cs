@@ -35,7 +35,7 @@ public static class JniLauncherTests
             "--add-exports=java.base/jdk.internal.misc=org.glavo.japp.boot",
             "--add-opens=java.base/jdk.internal.loader=org.glavo.japp.boot",
             "--add-opens=java.base/java.lang=org.glavo.japp.boot",
-        ], plan!.VmOptions);
+        ], plan.VmOptions);
         Assert.Equal(@"C:\boot\japp-boot.jar", plan.ModulePath);
         Assert.Equal("org.glavo.japp.boot", plan.Module);
         Assert.Equal(["arg1", "arg2"], plan.AppArgs);
@@ -68,10 +68,12 @@ public static class JniLauncherTests
             Environment.SetEnvironmentVariable("JDK_JAVA_OPTIONS", "-Xms64m \"-Dq=a b\"");
             options = JniLauncher.PrepareVmOptions(plan);
             Assert.Equal(
-                ["-Xms64m", "-Dq=a b", .. plan.VmOptions,
-                 @"--module-path=C:\boot\japp-boot.jar",
-                 "-Dsun.java.launcher=SUN_STANDARD",
-                 "-Dsun.java.command=arg1 arg2"],
+                [
+                    "-Xms64m", "-Dq=a b", .. plan.VmOptions,
+                    @"--module-path=C:\boot\japp-boot.jar",
+                    "-Dsun.java.launcher=SUN_STANDARD",
+                    "-Dsun.java.command=arg1 arg2"
+                ],
                 options);
         }
         finally
