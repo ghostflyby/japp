@@ -15,13 +15,14 @@
  * limitations under the License.
  */
 
-// Ported from src/main/java/org/glavo/japp/condition/ConditionParser.java: a
-// recursive-descent parser for the japp condition DSL (||, &&, !, parentheses
-// and java(version:, os:, arch:, libc:) terms). Note ! binds lower than && —
-// `!a && b` parses as `!(a && b)` — exactly as the Java parser does.
-
 namespace JApp.Launcher;
 
+/// <summary>Ported from
+/// src/main/java/org/glavo/japp/condition/ConditionParser.java: a
+/// recursive-descent parser for the japp condition DSL (||, &&, !,
+/// parentheses and java(version:, os:, arch:, libc:) terms). Note ! binds
+/// lower than && — `!a && b` parses as `!(a && b)` — exactly as the Java
+/// parser does.</summary>
 public sealed class ConditionParser
 {
     private static readonly Dictionary<string, Func<Dictionary<string, string>, ICondition>> Factories = new()

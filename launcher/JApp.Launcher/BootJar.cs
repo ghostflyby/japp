@@ -14,15 +14,6 @@
  * limitations under the License.
  */
 
-// Boot module location. The distribution shape is japp + boot.jar
-// concatenated: the module path recognizes a packaged module by its .jar
-// file name (ModulePath.readModule has no magic sniffing), and JarFile reads
-// the trailing zip through the EOCD tolerating the binary prefix — so a
-// .jar-suffixed symlink to this executable is a valid module path entry with
-// zero copying. When a link cannot be created (e.g. Windows symlink
-// privileges), the embedded jar is extracted to the temp directory instead.
-// Development points JAPP_BOOT_JAR at the Gradle-built jar.
-
 namespace JApp.Launcher;
 
 using System.Buffers.Binary;
@@ -30,6 +21,15 @@ using System.Runtime.InteropServices;
 using System.Security.Cryptography;
 using System.Text;
 
+/// <summary>Boot module location. The distribution shape is japp + boot.jar
+/// concatenated: the module path recognizes a packaged module by its .jar
+/// file name (ModulePath.readModule has no magic sniffing), and JarFile reads
+/// the trailing zip through the EOCD tolerating the binary prefix — so a
+/// .jar-suffixed link to this executable is a valid module path entry with
+/// zero copying. When a link cannot be created (Windows symlink privileges),
+/// the embedded jar is extracted to the temp directory instead. Development
+/// points the <c>JAPP_BOOT_JAR</c> environment variable at the Gradle-built
+/// jar.</summary>
 internal static partial class BootJar
 {
     private const string EnvironmentVariable = "JAPP_BOOT_JAR";

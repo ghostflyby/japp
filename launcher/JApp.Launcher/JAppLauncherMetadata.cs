@@ -15,15 +15,15 @@
  * limitations under the License.
  */
 
-// Ported from src/main/java/org/glavo/japp/launcher/JAppLauncherMetadata.java:
-// reads the FileEnd trailer. The physical file is [prefix][japp content][zip
-// suffix]; the trailer is found by stripping the suffix (EOCD probe) and the
-// prefix length is recovered as baseOffset.
-
 namespace JApp.Launcher;
 
 using System.Buffers.Binary;
 
+/// <summary>Ported from
+/// src/main/java/org/glavo/japp/launcher/JAppLauncherMetadata.java: reads
+/// the FileEnd trailer. The physical file is [prefix][japp content][zip
+/// suffix]; the trailer is found by stripping the suffix (EOCD probe) and
+/// the prefix length is recovered as baseOffset.</summary>
 public sealed class JAppLauncherMetadata
 {
     private const int DefaultEndBufferSize = 8192;

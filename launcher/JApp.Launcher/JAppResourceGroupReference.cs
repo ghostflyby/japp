@@ -15,11 +15,11 @@
  * limitations under the License.
  */
 
-// Ported from src/main/java/org/glavo/japp/launcher/JAppResourceGroupReference.java
-// (read side only — the launcher never writes these).
-
 namespace JApp.Launcher;
 
+/// <summary>Ported from
+/// src/main/java/org/glavo/japp/launcher/JAppResourceGroupReference.java
+/// (read side only — the launcher never writes these).</summary>
 public abstract class JAppResourceGroupReference(string name)
 {
     public const byte MagicNumber = 0x01;

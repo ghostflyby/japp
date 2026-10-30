@@ -15,12 +15,12 @@
  * limitations under the License.
  */
 
-// Ported from the writer half of src/main/java/org/glavo/japp/launcher/Launcher.java
-// plus the field ids of boot/src/main/java/org/glavo/japp/boot/JAppBootArgs.java;
-// the byte layout is what org.glavo.japp.boot parses back.
-
 namespace JApp.Launcher;
 
+/// <summary>Ported from the writer half of
+/// src/main/java/org/glavo/japp/launcher/Launcher.java plus the field ids
+/// of boot/src/main/java/org/glavo/japp/boot/JAppBootArgs.java; the byte
+/// layout is what org.glavo.japp.boot parses back.</summary>
 public static class BootArgs
 {
     public enum Field

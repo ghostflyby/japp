@@ -15,29 +15,20 @@
  * limitations under the License.
  */
 
-// Ported from src/main/java/org/glavo/japp/Main.java (mode dispatch) and the
-// argument loop of src/main/java/org/glavo/japp/launcher/Launcher.java. Exit
-// codes follow the Java launcher: 0 for help/success, 1 for usage errors and
-// no-suitable-Java; unlike the Java loop, positional arguments after the japp
-// file are forwarded to the application (the documented intent, matching
-// EmbeddedLauncher) instead of overwriting the file name.
-
 namespace JApp.Launcher;
 
-// Ported from src/main/java/org/glavo/japp/Main.java (mode dispatch) and the
-// argument loop of src/main/java/org/glavo/japp/launcher/Launcher.java. Exit
-// codes follow the Java launcher: 0 for help/success, 1 for usage errors and
-// no-suitable-Java; unlike the Java loop, positional arguments after the japp
-// file are forwarded to the application (the documented intent, matching
-// EmbeddedLauncher) instead of overwriting the file name.
-//
-// Dual launch modes: a bare launcher keeps the Java-compatible CLI; an
-// executable with an embedded archive is TRANSPARENT by default — every
-// argument reaches the application verbatim (JVM flags go through the
-// JVM-native JDK_JAVA_OPTIONS) — and the single reserved first token `--japp`
-// opens the full launcher CLI, where `-J` options and the `--` separator
-// apply.
-
+/// <summary>Ported from src/main/java/org/glavo/japp/Main.java (mode dispatch)
+/// and the argument loop of
+/// src/main/java/org/glavo/japp/launcher/Launcher.java. Exit codes follow the
+/// Java launcher: 0 for help/success, 1 for usage errors and no-suitable-Java;
+/// unlike the Java loop, positional arguments after the japp file are
+/// forwarded to the application (the documented intent, matching
+/// EmbeddedLauncher) instead of overwriting the file name.</summary>
+/// <remarks>Dual launch modes: a bare launcher keeps the Java-compatible CLI;
+/// an executable with an embedded archive is TRANSPARENT by default — every
+/// argument reaches the application verbatim — and the single reserved first
+/// token <c>--japp</c> opens the full launcher CLI, where <c>-J</c> options
+/// and the <c>--</c> separator apply.</remarks>
 internal static class CommandLine
 {
     public static async Task<int> RunAsync(string[] args)

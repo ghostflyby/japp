@@ -15,12 +15,11 @@
  * limitations under the License.
  */
 
-// Ported from src/main/java/org/glavo/japp/launcher/Launcher.java: read the
-// launcher metadata, select a JVM, resolve the config, encode the boot args
-// and hand off to java running org.glavo.japp.boot.
-
 namespace JApp.Launcher;
 
+/// <summary>Ported from src/main/java/org/glavo/japp/launcher/Launcher.java:
+/// read the launcher metadata, select a JVM, resolve the config, encode the
+/// boot args and hand off to java running org.glavo.japp.boot.</summary>
 internal static class Launcher
 {
     private const string BootLauncherModule = "org.glavo.japp.boot";

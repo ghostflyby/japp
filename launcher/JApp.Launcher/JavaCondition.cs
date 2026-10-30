@@ -15,14 +15,14 @@
  * limitations under the License.
  */
 
-// Ported from src/main/java/org/glavo/japp/condition/JavaCondition.java: the
-// java(...) term — version is a MINIMUM feature version, os/arch/libc are
-// MatchLists against the checked names.
-
 namespace JApp.Launcher;
 
 using System.Globalization;
 
+/// <summary>Ported from
+/// src/main/java/org/glavo/japp/condition/JavaCondition.java: the java(...)
+/// term — version is a MINIMUM feature version, os/arch/libc are MatchLists
+/// against the checked names.</summary>
 public sealed class JavaCondition(int? version, MatchList? os, MatchList? arch, MatchList? libc) : ICondition
 {
     public static JavaCondition FromMap(Dictionary<string, string> options)

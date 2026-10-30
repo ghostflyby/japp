@@ -15,11 +15,11 @@
  * limitations under the License.
  */
 
-// Ported from src/main/java/org/glavo/japp/condition/MatchList.java: '|'-separated
-// exact matches with an optional '!' negation prefix.
-
 namespace JApp.Launcher;
 
+/// <summary>Ported from
+/// src/main/java/org/glavo/japp/condition/MatchList.java: '|'-separated
+/// exact matches with an optional '!' negation prefix.</summary>
 public sealed class MatchList
 {
     private readonly bool _negative;

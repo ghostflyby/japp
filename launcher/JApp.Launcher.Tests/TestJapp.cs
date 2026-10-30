@@ -1,8 +1,8 @@
 namespace JApp.Launcher.Tests;
 
-// Builds japp file bytes by hand for the format tests: content = data pool +
-// boot metadata + launcher metadata + FileEnd, optionally wrapped in a prefix
-// and a trailing zip EOCD.
+/// <summary>Builds japp file bytes by hand for the format tests: content =
+/// data pool + boot metadata + launcher metadata + FileEnd, optionally
+/// wrapped in a prefix and a trailing zip EOCD.</summary>
 internal static class TestJapp
 {
     public const int DataPoolSize = 16;

@@ -15,11 +15,11 @@
  * limitations under the License.
  */
 
-// Ported from src/main/java/org/glavo/japp/launcher/JAppConfigGroup.java (read
-// and resolve side only — the launcher never writes these).
-
 namespace JApp.Launcher;
 
+/// <summary>Ported from
+/// src/main/java/org/glavo/japp/launcher/JAppConfigGroup.java (read and
+/// resolve side only — the launcher never writes these).</summary>
 public sealed class JAppConfigGroup
 {
     public enum Field

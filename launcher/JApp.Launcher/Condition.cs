@@ -15,12 +15,12 @@
  * limitations under the License.
  */
 
-// Ported from src/main/java/org/glavo/japp/condition/{Condition,AndCondition,OrCondition,NotCondition}.java.
-
 namespace JApp.Launcher;
 
-/// <summary>A predicate over the candidate JVM; the java(...) term is the only
-/// leaf kind the DSL defines.</summary>
+/// <summary>Ported from
+///     src/main/java/org/glavo/japp/condition/{Condition,AndCondition,OrCondition,NotCondition}.java:
+///     a predicate over the candidate JVM; the java(...) term is the only
+///     leaf kind the DSL defines.</summary>
 public interface ICondition
 {
     bool Test(JvmContext context);

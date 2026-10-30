@@ -14,15 +14,15 @@
  * limitations under the License.
  */
 
-// Bundles a japp archive into a launcher executable: output = [launcher
-// executable][japp archive][the launcher's trailing boot jar]. One formula
-// covers every base shape — a bare launcher (append), a launcher with a boot
-// jar tail (insert before the jar), and a launcher that already embeds an
-// archive (replace it, keeping the executable and the jar). --launcher
-// accepts a foreign-RID executable for cross builds.
-
 namespace JApp.Launcher;
 
+/// <summary>Bundles a japp archive into a launcher executable: output =
+/// [launcher executable][japp archive][the launcher's trailing boot jar]. One
+/// formula covers every base shape — a bare launcher (append), a launcher
+/// with a boot jar tail (insert before the jar), and a launcher that already
+/// embeds an archive (replace it, keeping the executable and the jar).
+/// <c>--launcher</c> accepts a foreign-RID executable for cross
+/// builds.</summary>
 internal static class Bundler
 {
     public static int Run(string[] args)

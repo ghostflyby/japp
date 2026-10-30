@@ -15,13 +15,6 @@
  * limitations under the License.
  */
 
-// JVM discovery adapts JdkFind (NuGet) to japp's condition model: the platform
-// name normalization tables are ported from
-// src/main/java/org/glavo/japp/platform/{OperatingSystem,Architecture,LibC}.java
-// so conditions match the same checked names the Java launcher tests against.
-// JdkFind does not expose LIBC, so it is re-read from the candidate's release
-// file.
-
 namespace JApp.Launcher;
 
 using JdkFind;
@@ -33,6 +26,12 @@ public sealed record JvmContext(int MajorVersion, string Os, string Arch, string
     public override string ToString() => $"version={MajorVersion}, os={Os}, arch={Arch}, libc={LibC}";
 }
 
+/// <summary>JVM discovery adapting JdkFind (NuGet) to japp's condition model:
+/// the platform name normalization tables are ported from
+/// src/main/java/org/glavo/japp/platform/{OperatingSystem,Architecture,LibC}.java
+/// so conditions match the same checked names the Java launcher tests
+/// against. JdkFind does not expose LIBC, so it is re-read from the
+/// candidate's release file.</summary>
 public static class JavaFinder
 {
     // Condition matching needs only release-file facts; the per-installation

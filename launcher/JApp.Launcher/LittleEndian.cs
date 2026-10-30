@@ -15,18 +15,16 @@
  * limitations under the License.
  */
 
-// Ported from base/src/main/java/org/glavo/japp/util/ByteBufferUtils.java and
-// base/src/main/java/org/glavo/japp/io/LittleEndianDataOutput.java: the japp
-// wire format is little-endian with length-prefixed UTF-8 strings (length 0 is
-// the null spelling on the read side).
-
 namespace JApp.Launcher;
 
 using System.Buffers.Binary;
 using System.Text;
 
-/// <summary>Cursor over a little-endian byte span; every read advances and
-/// bounds failures surface as <see cref="IOException" />.</summary>
+/// <summary>Ported from
+/// base/src/main/java/org/glavo/japp/util/ByteBufferUtils.java and
+/// base/src/main/java/org/glavo/japp/io/LittleEndianDataOutput.java: cursor
+/// over a little-endian byte span; every read advances and bounds failures
+/// surface as <see cref="IOException" />.</summary>
 internal ref struct LittleEndianReader(ReadOnlySpan<byte> buffer)
 {
     private readonly ReadOnlySpan<byte> _buffer = buffer;
